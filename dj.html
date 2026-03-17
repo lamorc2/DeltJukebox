@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DJ Screen</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      padding: 30px 24px;
+      min-height: 100vh;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      color: #ff50b4;
+      letter-spacing: 2px;
+    }
+
+    header p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-top: 6px;
+    }
+
+    #status-bar {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 20px;
+    }
+
+    #queue-list {
+      list-style: none;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .queue-item {
+      display: flex;
+      align-items: center;
+      background: #1e1e1e;
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border-left: 4px solid #ff50b4;
+      animation: slideIn 0.25s ease;
+      gap: 12px;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .position {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ff50b4;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .info {
+      flex: 1;
+    }
+
+    .song-name {
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .meta {
+      font-size: 0.78rem;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    .remove-btn {
+      background: transparent;
+      border: 1px solid #444;
+      color: #aaa;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+
+    .remove-btn:hover {
+      background: #c0392b;
+      border-color: #c0392b;
+      color: #fff;
+    }
+
+    #empty-msg {
+      text-align: center;
+      color: #444;
+      font-size: 1rem;
+      margin-top: 60px;
+      display: none;
+    }
+
+    #empty-msg span {
+      font-size: 2.5rem;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    /* Lock screen */
+    #lock-screen {
+      position: fixed;
+      inset: 0;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    #lock-screen.hidden { display: none; }
+
+    .lock-card {
+      background: #1e1e1e;
+      border-radius: 16px;
+      padding: 40px 32px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 0 40px rgba(255, 80, 180, 0.2);
+      text-align: center;
+    }
+
+    .lock-card .lock-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+
+    .lock-card h2 {
+      color: #ff50b4;
+      margin-bottom: 6px;
+    }
+
+    .lock-card p {
+      color: #666;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+
+    .lock-card input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      background: #2a2a2a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      margin-bottom: 14px;
+      outline: none;
+      text-align: center;
+      letter-spacing: 3px;
+      transition: border-color 0.2s;
+    }
+
+    .lock-card input[type="password"]:focus { border-color: #ff50b4; }
+
+    .lock-card button {
+      width: 100%;
+      padding: 12px;
+      background: #ff50b4;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .lock-card button:hover { background: #e0409f; }
+
+    .lock-error {
+      color: #f44336;
+      font-size: 0.85rem;
+      margin-top: 10px;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Lock Screen -->
+  <div id="lock-screen">
+    <div class="lock-card">
+      <div class="lock-icon">🔒</div>
+      <h2>DJ Screen</h2>
+      <p>Enter the password to continue</p>
+      <input type="password" id="passwordInput" placeholder="Password" autofocus>
+      <button onclick="unlock()">Unlock</button>
+      <div class="lock-error" id="lock-error"></div>
+    </div>
+  </div>
+
+  <header>
+    <h1>🎧 DJ Queue</h1>
+    <p>Song requests from the crowd</p>
+  </header>
+
+  <div id="status-bar">Connecting...</div>
+
+  <ul id="queue-list"></ul>
+
+  <div id="empty-msg">
+    <span>🎵</span>
+    No requests yet — the queue is empty!
+  </div>
+
+  <script>
+    const queueList = document.getElementById('queue-list');
+    const emptyMsg  = document.getElementById('empty-msg');
+    const statusBar = document.getElementById('status-bar');
+    const lockScreen = document.getElementById('lock-screen');
+
+    // Check if already unlocked this session
+    if (sessionStorage.getItem('dj_unlocked') === 'true') {
+      lockScreen.classList.add('hidden');
+      startPolling();
+    }
+
+    async function unlock() {
+      const input = document.getElementById('passwordInput');
+      const errorEl = document.getElementById('lock-error');
+      const password = input.value;
+
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+
+        if (res.ok) {
+          sessionStorage.setItem('dj_unlocked', 'true');
+          lockScreen.classList.add('hidden');
+          startPolling();
+        } else {
+          errorEl.textContent = '❌ Incorrect password';
+          input.value = '';
+          input.focus();
+        }
+      } catch (e) {
+        errorEl.textContent = '⚠️ Could not reach server';
+      }
+    }
+
+    // Allow Enter key on password field
+    document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') unlock();
+    });
+
+    let pollingInterval = null;
+    function startPolling() {
+      fetchQueue();
+      pollingInterval = setInterval(fetchQueue, 3000);
+    }
+
+    async function fetchQueue() {
+      try {
+        const res = await fetch('/api/queue');
+        if (!res.ok) throw new Error('Server error');
+        const queue = await res.json();
+        renderQueue(queue);
+        const now = new Date().toLocaleTimeString();
+        statusBar.textContent = `Last updated: ${now} · ${queue.length} request${queue.length !== 1 ? 's' : ''}`;
+      } catch (e) {
+        statusBar.textContent = '⚠️ Could not reach server — retrying...';
+      }
+    }
+
+    function renderQueue(queue) {
+      queueList.innerHTML = '';
+
+      if (queue.length === 0) {
+        emptyMsg.style.display = 'block';
+        return;
+      }
+
+      emptyMsg.style.display = 'none';
+
+      queue.forEach((entry, index) => {
+        const li = document.createElement('li');
+        li.className = 'queue-item';
+        li.dataset.id = entry.id;
+
+        const time = new Date(entry.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+        li.innerHTML = `
+          <div class="position">#${index + 1}</div>
+          <div class="info">
+            <div class="song-name">${escapeHtml(entry.song)}</div>
+            <div class="meta">Requested by ${escapeHtml(entry.requester)} · ${time}</div>
+          </div>
+          <button class="remove-btn" onclick="removeEntry(${entry.id})">✕ Remove</button>
+        `;
+
+        queueList.appendChild(li);
+      });
+    }
+
+    async function removeEntry(id) {
+      try {
+        const res = await fetch(`/api/queue/${id}`, { method: 'DELETE' });
+        if (res.ok) fetchQueue();
+      } catch (e) {
+        alert('Could not remove the song. Try again.');
+      }
+    }
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+
+  </script>
+
+</body>
+</html>
