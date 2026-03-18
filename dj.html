@@ -360,6 +360,8 @@
     });
 
     let pollingInterval = null;
+    let lastQueueSignature = null;
+
     function startPolling() {
       fetchQueue();
       pollingInterval = setInterval(fetchQueue, 3000);
@@ -370,7 +372,14 @@
         const res = await fetch('/api/queue');
         if (!res.ok) throw new Error();
         const queue = await res.json();
-        renderQueue(queue);
+
+        // Only re-render if the queue IDs have actually changed
+        const signature = queue.map(e => e.id).join(',');
+        if (signature !== lastQueueSignature) {
+          lastQueueSignature = signature;
+          renderQueue(queue);
+        }
+
         const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         statusBar.textContent = `Live · ${queue.length} request${queue.length !== 1 ? 's' : ''} · ${now}`;
       } catch (e) {
