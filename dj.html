@@ -2,196 +2,289 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>DJ Screen</title>
+  <title>ΔΤΔ DJ Queue</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --purple: #4B0082;
+      --purple-mid: #6a0dad;
+      --purple-light: #7b2fbe;
+      --gold: #CFB53B;
+      --gold-light: #e8d060;
+      --gold-dim: #9a8420;
+      --bg: #0e0a1a;
+      --card: #180f2e;
+      --border: rgba(207, 181, 59, 0.2);
+      --text: #f0e8ff;
+      --muted: #9080b0;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 30px 24px;
+      font-family: 'Lato', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       min-height: 100vh;
+      padding: 36px 24px 48px;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 40% at 20% 10%, rgba(107,13,173,0.3) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 90%, rgba(207,181,59,0.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     header {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      margin-bottom: 30px;
+      margin-bottom: 36px;
+    }
+
+    .greek-letters {
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: 8px;
+      background: linear-gradient(135deg, var(--gold-dim) 0%, var(--gold-light) 50%, var(--gold-dim) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 16px rgba(207,181,59,0.35));
+    }
+
+    .org-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 5px;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-top: 2px;
+      margin-bottom: 10px;
     }
 
     header h1 {
-      font-size: 2rem;
-      color: #ff50b4;
-      letter-spacing: 2px;
+      font-family: 'Lato', sans-serif;
+      font-weight: 300;
+      font-size: 0.85rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--muted);
     }
 
-    header p {
-      color: #666;
-      font-size: 0.85rem;
-      margin-top: 6px;
+    .gold-rule {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 16px auto 0;
     }
 
     #status-bar {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      font-size: 0.8rem;
-      color: #555;
-      margin-bottom: 20px;
+      font-size: 0.75rem;
+      color: rgba(207,181,59,0.35);
+      letter-spacing: 1.5px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
     }
 
     #queue-list {
+      position: relative;
+      z-index: 1;
       list-style: none;
-      max-width: 700px;
+      max-width: 720px;
       margin: 0 auto;
     }
 
     .queue-item {
       display: flex;
       align-items: center;
-      background: #1e1e1e;
-      border-radius: 10px;
-      padding: 14px 16px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 16px 18px;
       margin-bottom: 10px;
-      border-left: 4px solid #ff50b4;
-      animation: slideIn 0.25s ease;
-      gap: 12px;
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      gap: 14px;
+      animation: slideIn 0.3s ease both;
+      transition: border-color 0.2s;
+    }
+
+    .queue-item:hover {
+      border-color: rgba(207,181,59,0.5);
+      border-left-color: var(--gold-light);
     }
 
     @keyframes slideIn {
-      from { opacity: 0; transform: translateY(-8px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
     .position {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #ff50b4;
-      min-width: 28px;
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      min-width: 32px;
       text-align: center;
+      opacity: 0.7;
     }
 
-    .info {
-      flex: 1;
-    }
+    .info { flex: 1; }
 
     .song-name {
       font-size: 1rem;
-      font-weight: bold;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: 0.3px;
     }
 
     .meta {
-      font-size: 0.78rem;
-      color: #888;
+      font-size: 0.75rem;
+      color: var(--muted);
       margin-top: 3px;
+      letter-spacing: 0.5px;
     }
 
     .remove-btn {
       background: transparent;
-      border: 1px solid #444;
-      color: #aaa;
-      padding: 6px 12px;
-      border-radius: 6px;
+      border: 1px solid rgba(207,181,59,0.15);
+      color: var(--muted);
+      padding: 7px 14px;
+      border-radius: 7px;
       cursor: pointer;
-      font-size: 0.8rem;
-      transition: background 0.2s, color 0.2s, border-color 0.2s;
+      font-family: 'Lato', sans-serif;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.2s;
       white-space: nowrap;
     }
 
     .remove-btn:hover {
-      background: #c0392b;
+      background: rgba(180, 40, 40, 0.3);
       border-color: #c0392b;
-      color: #fff;
+      color: #e07070;
     }
 
     #empty-msg {
+      position: relative;
+      z-index: 1;
       text-align: center;
-      color: #444;
-      font-size: 1rem;
-      margin-top: 60px;
+      color: rgba(144,128,176,0.4);
+      font-size: 0.9rem;
+      margin-top: 80px;
       display: none;
+      letter-spacing: 1px;
     }
 
-    #empty-msg span {
-      font-size: 2.5rem;
+    #empty-msg .empty-icon {
+      font-size: 2.8rem;
       display: block;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
+      opacity: 0.4;
     }
 
-    /* Lock screen */
+    /* ── Lock Screen ── */
     #lock-screen {
       position: fixed;
       inset: 0;
-      background: #111;
+      background: var(--bg);
       display: flex;
       align-items: center;
       justify-content: center;
       z-index: 100;
+      padding: 24px;
     }
 
     #lock-screen.hidden { display: none; }
 
     .lock-card {
-      background: #1e1e1e;
-      border-radius: 16px;
-      padding: 40px 32px;
+      background: var(--card);
+      border-radius: 20px;
+      padding: 44px 32px 36px;
       width: 100%;
-      max-width: 320px;
-      box-shadow: 0 0 40px rgba(255, 80, 180, 0.2);
+      max-width: 340px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(207,181,59,0.12);
       text-align: center;
+      animation: fadeUp 0.4s ease both;
     }
 
-    .lock-card .lock-icon {
-      font-size: 2.5rem;
-      margin-bottom: 12px;
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .lock-card h2 {
-      color: #ff50b4;
-      margin-bottom: 6px;
-    }
+    .lock-card .greek-letters { font-size: 2.4rem; margin-bottom: 4px; }
+    .lock-card .org-name { margin-bottom: 6px; }
 
     .lock-card p {
-      color: #666;
-      font-size: 0.85rem;
-      margin-bottom: 24px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 28px;
     }
 
     .lock-card input[type="password"] {
       width: 100%;
-      padding: 12px 14px;
-      background: #2a2a2a;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 1rem;
-      margin-bottom: 14px;
-      outline: none;
+      padding: 13px 15px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(207,181,59,0.18);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 1.1rem;
       text-align: center;
-      letter-spacing: 3px;
-      transition: border-color 0.2s;
+      letter-spacing: 5px;
+      outline: none;
+      margin-bottom: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: 'Lato', sans-serif;
     }
 
-    .lock-card input[type="password"]:focus { border-color: #ff50b4; }
+    .lock-card input[type="password"]:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(207,181,59,0.08);
+    }
 
     .lock-card button {
       width: 100%;
-      padding: 12px;
-      background: #ff50b4;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: bold;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--purple-mid), var(--purple-light));
+      color: var(--gold-light);
+      border: 1px solid rgba(207,181,59,0.3);
+      border-radius: 10px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      letter-spacing: 2px;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.2s;
+      text-transform: uppercase;
     }
 
-    .lock-card button:hover { background: #e0409f; }
+    .lock-card button:hover {
+      background: linear-gradient(135deg, var(--purple-light), #9b3fde);
+      border-color: var(--gold);
+      box-shadow: 0 0 20px rgba(107,13,173,0.5);
+    }
 
     .lock-error {
-      color: #f44336;
-      font-size: 0.85rem;
-      margin-top: 10px;
+      color: #e07070;
+      font-size: 0.8rem;
+      margin-top: 12px;
       min-height: 18px;
+      letter-spacing: 0.5px;
     }
   </style>
 </head>
@@ -200,18 +293,21 @@
   <!-- Lock Screen -->
   <div id="lock-screen">
     <div class="lock-card">
-      <div class="lock-icon">🔒</div>
-      <h2>DJ Screen</h2>
-      <p>Enter the password to continue</p>
-      <input type="password" id="passwordInput" placeholder="Password" autofocus>
-      <button onclick="unlock()">Unlock</button>
+      <div class="greek-letters">ΔΤΔ</div>
+      <div class="org-name">Delta Tau Delta</div>
+      <p>DJ Access Only</p>
+      <input type="password" id="passwordInput" placeholder="••••••••" autofocus>
+      <button onclick="unlock()">Enter</button>
       <div class="lock-error" id="lock-error"></div>
     </div>
   </div>
 
+  <!-- Main DJ Screen -->
   <header>
-    <h1>🎧 DJ Queue</h1>
-    <p>Song requests from the crowd</p>
+    <div class="greek-letters">ΔΤΔ</div>
+    <div class="org-name">Delta Tau Delta</div>
+    <h1>DJ Queue</h1>
+    <div class="gold-rule"></div>
   </header>
 
   <div id="status-bar">Connecting...</div>
@@ -219,32 +315,30 @@
   <ul id="queue-list"></ul>
 
   <div id="empty-msg">
-    <span>🎵</span>
-    No requests yet — the queue is empty!
+    <span class="empty-icon">🎵</span>
+    No requests yet — the queue is empty
   </div>
 
   <script>
-    const queueList = document.getElementById('queue-list');
-    const emptyMsg  = document.getElementById('empty-msg');
-    const statusBar = document.getElementById('status-bar');
+    const queueList  = document.getElementById('queue-list');
+    const emptyMsg   = document.getElementById('empty-msg');
+    const statusBar  = document.getElementById('status-bar');
     const lockScreen = document.getElementById('lock-screen');
 
-    // Check if already unlocked this session
     if (sessionStorage.getItem('dj_unlocked') === 'true') {
       lockScreen.classList.add('hidden');
       startPolling();
     }
 
     async function unlock() {
-      const input = document.getElementById('passwordInput');
+      const input   = document.getElementById('passwordInput');
       const errorEl = document.getElementById('lock-error');
-      const password = input.value;
 
       try {
         const res = await fetch('/api/auth', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password })
+          body: JSON.stringify({ password: input.value })
         });
 
         if (res.ok) {
@@ -252,7 +346,7 @@
           lockScreen.classList.add('hidden');
           startPolling();
         } else {
-          errorEl.textContent = '❌ Incorrect password';
+          errorEl.textContent = '✕ Incorrect password';
           input.value = '';
           input.focus();
         }
@@ -261,7 +355,6 @@
       }
     }
 
-    // Allow Enter key on password field
     document.getElementById('passwordInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') unlock();
     });
@@ -275,13 +368,13 @@
     async function fetchQueue() {
       try {
         const res = await fetch('/api/queue');
-        if (!res.ok) throw new Error('Server error');
+        if (!res.ok) throw new Error();
         const queue = await res.json();
         renderQueue(queue);
-        const now = new Date().toLocaleTimeString();
-        statusBar.textContent = `Last updated: ${now} · ${queue.length} request${queue.length !== 1 ? 's' : ''}`;
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        statusBar.textContent = `Live · ${queue.length} request${queue.length !== 1 ? 's' : ''} · ${now}`;
       } catch (e) {
-        statusBar.textContent = '⚠️ Could not reach server — retrying...';
+        statusBar.textContent = '⚠️  Could not reach server — retrying...';
       }
     }
 
@@ -331,9 +424,6 @@
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;');
     }
-
-
   </script>
-
 </body>
 </html>
